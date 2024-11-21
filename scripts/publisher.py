@@ -6,6 +6,7 @@ from time import sleep
 from std_msgs.msg import String
 from waterlinked_a50_ros_driver.msg import DVL
 from waterlinked_a50_ros_driver.msg import DVLBeam
+from waterlinked_a50_ros_driver.msg import DVLDR
 import select
 
 def connect():
@@ -13,7 +14,7 @@ def connect():
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((TCP_IP, TCP_PORT))
-		s.settimeout(1)
+		s.settimeout(2)
 	except socket.error as err:
 		rospy.logerr("No route to host, DVL might be booting? {}".format(err))
 		sleep(1)
@@ -30,10 +31,10 @@ beam3 = DVLBeam()
 def getData():
 	global oldJson, s
 	raw_data = ""
-
+	
 	while not '\n' in raw_data:
 		try:
-			rec = s.recv(1) # Add timeout for that
+			rec = s.recv(2) # Add timeout for that
 			if len(rec) == 0:
 				rospy.logerr("Socket closed by the DVL, reopening")
 				connect()
@@ -42,7 +43,10 @@ def getData():
 			rospy.logerr("Lost connection with the DVL, reinitiating the connection: {}".format(err))
 			connect()
 			continue
+		rec=rec.decode()
 		raw_data = raw_data + rec
+	rospy.logwarn(len(raw_data))
+	rospy.logwarn(raw_data)
 	raw_data = oldJson + raw_data
 	oldJson = ""
 	raw_data = raw_data.split('\n')
@@ -124,7 +128,7 @@ def publisher():
 if __name__ == '__main__':
 	global s, TCP_IP, TCP_PORT, do_log_raw_data
 	rospy.init_node('a50_pub', anonymous=False)
-	TCP_IP = rospy.get_param("~ip", "10.42.0.186")
+	TCP_IP = rospy.get_param("~ip", "192.168.194.95")
 	TCP_PORT = rospy.get_param("~port", 16171)
 	do_log_raw_data = rospy.get_param("~do_log_raw_data", False)
 	connect()

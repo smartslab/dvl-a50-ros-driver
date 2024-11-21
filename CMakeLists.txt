@@ -53,6 +53,10 @@ add_message_files(
   FILES
   DVL.msg
   DVLBeam.msg
+  CommandResponse.msg
+  ConfigCommand.msg
+  ConfigStatus.msg
+  DVLDR.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -200,6 +204,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-catkin_install_python(PROGRAMS scripts/publisher.py scripts/subscriber.py
+catkin_install_python(PROGRAMS scripts/publisher.py scripts/subscriber.py scripts/dvl_a50.py
 	DESTINATION $(CATKIN_PACKAGE_BIN_DESTINATION)
 )
