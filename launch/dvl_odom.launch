@@ -3,18 +3,7 @@
     
     <node pkg="waterlinked_a50_ros_driver" type="dvl_a50.py" name="dvl_node"/>
     
-    <include file="$(find depthai_descriptions)/launch/urdf.launch">
-        <arg name="base_frame"      value="$(arg  base_frame)"  />
-        <arg name="parent_frame"    value="$(arg  parent_frame)"/>
-        <arg name="camera_model"    value="$(arg  camera_model)"/>
-        <arg name="tf_prefix"       value="$(arg  tf_prefix)" />
-        <arg name="cam_pos_x"       value="$(arg  cam_pos_x)"   />
-        <arg name="cam_pos_y"       value="$(arg  cam_pos_y)"   />
-        <arg name="cam_pos_z"       value="$(arg  cam_pos_z)"   />
-        <arg name="cam_roll"        value="$(arg  cam_roll)"    />
-        <arg name="cam_pitch"       value="$(arg  cam_pitch)"   />
-        <arg name="cam_yaw"         value="$(arg  cam_yaw)"     />
-    </include>
+
          
 
 </launch>

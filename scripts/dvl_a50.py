@@ -44,6 +44,7 @@ class DVL_A50(object):
         self.oldJson = ""
         self.current_altitude = 0.0
         self.old_altitude = 0.0
+        self.dvl_odom = Odometry()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         rospy.loginfo("Connecting...")
         self.connect()
@@ -127,12 +128,13 @@ class DVL_A50(object):
 
         theDVL.header.stamp = self.stamp
         theDVL.header.frame_id = "dvl_link"
-        dvl_odom = Odometry()
-        dvl_odom.header=theDVL.header
-        dvl_odom.header.frame_id = "dvl_link"
+        dvl_odom = self.dvl_odom
+        #dvl_odom.header=theDVL.header
+        dvl_odom.header.frame_id = "map"
         dvl_odom.child_frame_id="dvl_link"
 
         if 'time' in data:
+            #recieved a velocity dvl message
             theDVL.time = float(data["time"])
             theDVL.velocity.x = float(data["vx"])
             theDVL.velocity.y = float(data["vy"])
@@ -141,11 +143,12 @@ class DVL_A50(object):
             self.current_altitude = float(data["altitude"])
             theDVL.velocity_valid = data["velocity_valid"]
             
+            #adds velocity to the most recent pose message
             dvl_odom.twist.twist.linear.x=theDVL.velocity.x
             dvl_odom.twist.twist.linear.y=theDVL.velocity.y
             dvl_odom.twist.twist.linear.z=theDVL.velocity.z
             
-            dvl_odom.header.stamp=rospy.Time.from_sec(theDVL.time)
+            dvl_odom.header.stamp=rospy.Time.now() #rospy.Time.from_sec(theDVL.time)
             
             if (self.current_altitude >= 0.0) and theDVL.velocity_valid:
                 theDVL.altitude = self.current_altitude
@@ -187,9 +190,12 @@ class DVL_A50(object):
 		
             theDVL.beams = [beam0, beam1, beam2, beam3]
 		
+            #publish the messages
             self.dvl_publisher_.publish(theDVL)
+            self.dvl_kimera.publish(dvl_odom)
             
         if 'ts' in data:
+            #received a position message
             DVLDeadReckoning.time = float(data["ts"])
             DVLDeadReckoning.position.x = float(data["x"])
             DVLDeadReckoning.position.y = float(data["y"])
@@ -202,20 +208,20 @@ class DVL_A50(object):
             DVLDeadReckoning.status = data["status"]
             DVLDeadReckoning.format = data["format"]
             
-            dvl_odom.pose.pose.position.x=DVLDeadReckoning.position.x
-            dvl_odom.pose.pose.position.y=DVLDeadReckoning.position.y
-            dvl_odom.pose.pose.position.z=DVLDeadReckoning.position.z
+            #change stored value for the position rather than publishing
+            self.dvl_odom.pose.pose.position.x=DVLDeadReckoning.position.x
+            self.dvl_odom.pose.pose.position.y=DVLDeadReckoning.position.y
+            self.dvl_odom.pose.pose.position.z=DVLDeadReckoning.position.z
             
             [x,y,z,w]=qfe(DVLDeadReckoning.roll,DVLDeadReckoning.pitch,DVLDeadReckoning.yaw)
             
-            dvl_odom.pose.pose.orientation.x=x
-            dvl_odom.pose.pose.orientation.y=y
-            dvl_odom.pose.pose.orientation.z=z
-            dvl_odom.pose.pose.orientation.w=w
+            self.dvl_odom.pose.pose.orientation.x=x
+            self.dvl_odom.pose.pose.orientation.y=y
+            self.dvl_odom.pose.pose.orientation.z=z
+            self.dvl_odom.pose.pose.orientation.w=w
             
             self.dvl_publisher_pos.publish(DVLDeadReckoning)
         
-        self.dvl_kimera.publish(dvl_odom)
 
 
 def main(args=None):
